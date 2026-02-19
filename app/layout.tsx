@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   title: "Repairer of the Breach",
   description:
     "Nurturing the next generation of Christian leaders and changemakers",
-  generator: "v0.app",
+  generator: "hayotunday",
+  applicationName: "Repairer of the Breach Ministry",
   icons: {
     icon: [
       {
