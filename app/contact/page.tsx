@@ -4,7 +4,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Facebook, Share2 } from "lucide-react";
+import { Mail, Phone, MapPin, Share2, Facebook } from "lucide-react";
 import { useState } from "react";
 import {
   Accordion,
@@ -23,6 +23,7 @@ export default function Contact() {
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -34,14 +35,30 @@ export default function Contact() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate form submission
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFormData({ fullName: "", email: "", subject: "", message: "" });
-    }, 3000);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        setSubmitted(true);
+        toast.success("Message sent successfully!");
+        setFormData({ fullName: "", email: "", subject: "", message: "" });
+        setTimeout(() => setSubmitted(false), 3000);
+      } else {
+        toast.error("Failed to send message. Please try again.");
+      }
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const faqs = [
@@ -177,9 +194,14 @@ export default function Contact() {
 
                 <Button
                   type="submit"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 font-semibold"
+                  disabled={isSubmitting}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 font-semibold disabled:opacity-70"
                 >
-                  {submitted ? "Message Sent!" : "Send Message"}
+                  {isSubmitting
+                    ? "Sending..."
+                    : submitted
+                      ? "Message Sent!"
+                      : "Send Message"}
                 </Button>
               </form>
             </div>
