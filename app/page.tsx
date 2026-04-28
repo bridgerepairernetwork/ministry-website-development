@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { DevotionalSection } from "@/components/devotional-section";
 
 export default function Home() {
   return (
@@ -139,6 +140,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Devotional Section */}
+      <DevotionalSection />
 
       {/* Core Pillars */}
       <section className="bg-white py-16 md:py-24">

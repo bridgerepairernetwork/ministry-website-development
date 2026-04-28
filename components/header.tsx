@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
 
   const navItems = [
     { href: "/", label: "Home" },
     { href: "/about", label: "About" },
     { href: "/programs", label: "Our Programs" },
+    { href: "/devotional", label: "Devotional" },
     { href: "/gallery", label: "Gallery" },
     { href: "/contact", label: "Contact" },
   ];
@@ -44,7 +46,9 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className="text-gray-700 hover:text-purple-600 transition-colors font-medium text-sm"
+              className={`text-gray-700 hover:text-purple-600 transition-colors font-medium text-sm ${
+                pathname === item.href ? "text-purple-600" : ""
+              }`}
             >
               {item.label}
             </Link>

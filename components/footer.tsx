@@ -113,6 +113,14 @@ export function Footer() {
               </li>
               <li>
                 <Link
+                  href="/devotional"
+                  className="hover:text-purple-400 transition-colors"
+                >
+                  Daily Devotional
+                </Link>
+              </li>
+              <li>
+                <Link
                   href="/gallery"
                   className="hover:text-purple-400 transition-colors"
                 >

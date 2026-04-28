@@ -2,7 +2,17 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { Edit, Trash, ImageIcon, Phone, Video } from "lucide-react";
+import {
+  Edit,
+  Trash,
+  ImageIcon,
+  Phone,
+  Video,
+  BookOpen,
+  Settings,
+  LayoutDashboard,
+  Plus,
+} from "lucide-react";
 import { auth } from "@/lib/firebase-client";
 import {
   signInWithEmailAndPassword,
@@ -23,6 +33,7 @@ import AdminForm from "@/components/admin-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   type ContactInfo,
   getContactInfo,
@@ -33,7 +44,14 @@ import {
   deleteGalleryItem,
   getGalleryItems,
 } from "@/lib/gallery";
+import {
+  type Devotional,
+  saveDevotional,
+  deleteDevotional,
+  getRecentDevotionals,
+} from "@/lib/devotional";
 import { formatPhoneNumber } from "@/lib/utils";
+import { format } from "date-fns";
 
 export default function AdminPage() {
   const pageSize = 8;
@@ -59,10 +77,22 @@ export default function AdminPage() {
   const [mode, setMode] = useState<"view" | "edit">("view");
   const [showForm, setShowForm] = useState(false);
 
+  // Devotional state
+  const [devotionals, setDevotionals] = useState<Devotional[]>([]);
+  const [devotionalForm, setDevotionalForm] = useState<Devotional>({
+    title: "",
+    date: format(new Date(), "yyyy-MM-dd"),
+    memoryVerse: { verse: "", text: "" },
+    bibleText: { verse: "", text: "" },
+    message: "",
+    conclusion: "",
+  });
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => setUser(u));
     fetchContact();
     fetchGallery(0);
+    fetchDevotionals();
     return unsub;
   }, []);
 
@@ -140,6 +170,25 @@ export default function AdminPage() {
     }
   };
 
+  const fetchDevotionals = async () => {
+    const items = await getRecentDevotionals(20);
+    setDevotionals(items);
+  };
+
+  const handleSaveDevotional = async () => {
+    const token = await getToken();
+    if (!token) return;
+
+    const result = await saveDevotional(devotionalForm, token);
+    if (result.success) {
+      toast.success("Devotional saved");
+      fetchDevotionals();
+      setShowForm(false);
+    } else {
+      toast.error("Failed to save devotional");
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -188,193 +237,419 @@ export default function AdminPage() {
     <div className="max-w-7xl mx-auto py-10 px-4 md:px-6 space-y-8">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your website content.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <LayoutDashboard className="w-6 h-6 text-purple-600" />
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+          </div>
+          <p className="text-muted-foreground ml-8">
+            Manage your website content and devotionals.
+          </p>
         </div>
         <Button variant="secondary" onClick={logout}>
           Logout
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        {/* contact */}
-        <Card>
-          <CardHeader className="flex flex-row items-start justify-between">
-            <div>
+      <Tabs defaultValue="devotionals" className="space-y-6">
+        <TabsList className="bg-slate-100 p-1">
+          <TabsTrigger value="devotionals" className="flex items-center gap-2">
+            <BookOpen className="w-4 h-4" /> Devotionals
+          </TabsTrigger>
+          <TabsTrigger value="gallery" className="flex items-center gap-2">
+            <ImageIcon className="w-4 h-4" /> Gallery
+          </TabsTrigger>
+          <TabsTrigger value="settings" className="flex items-center gap-2">
+            <Settings className="w-4 h-4" /> Site Settings
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="devotionals" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Daily Devotionals</CardTitle>
+                <CardDescription>
+                  Create and manage daily spiritual content.
+                </CardDescription>
+              </div>
+              <Button onClick={() => setShowForm(!showForm)}>
+                {showForm ? (
+                  "Cancel"
+                ) : (
+                  <>
+                    <Plus className="w-4 h-4 mr-2" /> New Devotional
+                  </>
+                )}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {showForm && (
+                <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 mb-8 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Title</Label>
+                      <Input
+                        value={devotionalForm.title}
+                        onChange={(e) =>
+                          setDevotionalForm({
+                            ...devotionalForm,
+                            title: e.target.value,
+                          })
+                        }
+                        placeholder="Today's Theme"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Date</Label>
+                      <Input
+                        type="date"
+                        value={devotionalForm.date}
+                        onChange={(e) =>
+                          setDevotionalForm({
+                            ...devotionalForm,
+                            date: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-sm text-purple-700">
+                        MEMORY VERSE
+                      </h4>
+                      <div className="space-y-2">
+                        <Label>Reference (e.g. John 3:16)</Label>
+                        <Input
+                          value={devotionalForm.memoryVerse.verse}
+                          onChange={(e) =>
+                            setDevotionalForm({
+                              ...devotionalForm,
+                              memoryVerse: {
+                                ...devotionalForm.memoryVerse,
+                                verse: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Text</Label>
+                        <Textarea
+                          value={devotionalForm.memoryVerse.text}
+                          onChange={(e) =>
+                            setDevotionalForm({
+                              ...devotionalForm,
+                              memoryVerse: {
+                                ...devotionalForm.memoryVerse,
+                                text: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <h4 className="font-bold text-sm text-purple-700">
+                        BIBLE TEXT
+                      </h4>
+                      <div className="space-y-2">
+                        <Label>Reference</Label>
+                        <Input
+                          value={devotionalForm.bibleText.verse}
+                          onChange={(e) =>
+                            setDevotionalForm({
+                              ...devotionalForm,
+                              bibleText: {
+                                ...devotionalForm.bibleText,
+                                verse: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Text</Label>
+                        <Textarea
+                          value={devotionalForm.bibleText.text}
+                          onChange={(e) =>
+                            setDevotionalForm({
+                              ...devotionalForm,
+                              bibleText: {
+                                ...devotionalForm.bibleText,
+                                text: e.target.value,
+                              },
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-4 border-t">
+                    <Label>Message Body</Label>
+                    <Textarea
+                      rows={8}
+                      value={devotionalForm.message}
+                      onChange={(e) =>
+                        setDevotionalForm({
+                          ...devotionalForm,
+                          message: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Conclusion / Prayer</Label>
+                    <Textarea
+                      value={devotionalForm.conclusion}
+                      onChange={(e) =>
+                        setDevotionalForm({
+                          ...devotionalForm,
+                          conclusion: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <Button className="w-full" onClick={handleSaveDevotional}>
+                    Save Devotional
+                  </Button>
+                </div>
+              )}
+
+              <div className="border rounded-md overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 border-b">
+                    <tr>
+                      <th className="px-4 py-3 text-left">Date</th>
+                      <th className="px-4 py-3 text-left">Title</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {devotionals.map((devo) => (
+                      <tr key={devo.id} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 font-medium">{devo.date}</td>
+                        <td className="px-4 py-3">{devo.title}</td>
+                        <td className="px-4 py-3 text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setDevotionalForm(devo);
+                              setShowForm(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500"
+                            onClick={async () => {
+                              const token = await getToken();
+                              if (!token || !devo.id) return;
+                              await deleteDevotional(devo.id, token);
+                              fetchDevotionals();
+                            }}
+                          >
+                            <Trash className="w-4 h-4" />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="gallery" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="flex items-center gap-2">
-                <Phone className="w-5 h-5" /> Contact Information
+                <ImageIcon className="w-5 h-5" /> Gallery
               </CardTitle>
-              <CardDescription>
-                Update the public contact details for the ministry.
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              {mode === "view" && (
+              <div className="flex items-center">
                 <Button
                   size="sm"
-                  onClick={() => {
-                    setMode("edit");
-                    setOldContactInfo(contactInfo);
-                  }}
+                  variant={showForm ? "destructive" : "default"}
+                  onClick={() => setShowForm(!showForm)}
                 >
-                  <Edit className="w-4 h-4 mr-2" /> Edit
-                </Button>
-              )}
-
-              {mode === "edit" && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setMode("view");
-                      setContactInfo(oldContactInfo);
-                    }}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    onClick={saveContact}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Saving..." : "Save"}
-                  </Button>
-                </>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="contact-email">Email</Label>
-              <Input
-                id="contact-email"
-                value={contactInfo.email || ""}
-                disabled={mode === "view"}
-                onChange={(e) =>
-                  setContactInfo((c) => ({ ...c, email: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact-phone">Phone</Label>
-              <Input
-                id="contact-phone"
-                value={formatPhoneNumber(contactInfo.phone || "")}
-                disabled={mode === "view"}
-                onChange={(e) =>
-                  setContactInfo((c) => ({ ...c, phone: e.target.value }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact-address">Address</Label>
-              <Textarea
-                id="contact-address"
-                value={contactInfo.address || ""}
-                disabled={mode === "view"}
-                onChange={(e) =>
-                  setContactInfo((c) => ({
-                    ...c,
-                    address: e.target.value,
-                  }))
-                }
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* gallery */}
-        <Card className="md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="w-5 h-5" /> Gallery
-            </CardTitle>
-            <div className="flex items-center">
-              <Button
-                size="sm"
-                variant={showForm ? "destructive" : "default"}
-                onClick={() => setShowForm(!showForm)}
-              >
-                {showForm ? "Cancel" : "Add Media"}
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {gallery.map((item) => (
-                <Card
-                  key={item.id}
-                  className="overflow-hidden group w-fit h-fit"
-                >
-                  <div className="relative">
-                    <div className="w-full h-48 bg-gray-200">
-                      {item.type === "video" && item.videoUrl ? (
-                        <div className="w-full h-full flex items-center justify-center bg-black">
-                          <Video className="w-12 h-12 text-white" />
-                        </div>
-                      ) : item.imageUrl ? (
-                        <Image
-                          width={300}
-                          height={200}
-                          src={item.imageUrl}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                          loading="eager"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                          <ImageIcon className="w-12 h-12 text-gray-500" />
-                        </div>
-                      )}
-                    </div>
-                    <Button
-                      size="icon"
-                      variant="destructive"
-                      onClick={() =>
-                        handleDeleteGalleryItem(
-                          item.id,
-                          item.publicId,
-                          item.type,
-                        )
-                      }
-                      className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <CardContent className="p-3">
-                    <p
-                      className="font-semibold truncate text-sm"
-                      title={item.title}
-                    >
-                      {item.title}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {item.category}
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            {!isLastPage && (
-              <div className="mt-6 flex justify-center">
-                <Button
-                  onClick={() => fetchGallery(page + 1)}
-                  disabled={loadingGallery}
-                >
-                  {loadingGallery ? "Loading..." : "Load more"}
+                  {showForm ? "Cancel" : "Add Media"}
                 </Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {showForm && <AdminForm onClose={() => setShowForm(false)} />}
 
-        {/* Form Drawer */}
-        {showForm && <AdminForm onClose={() => setShowForm(false)} />}
-      </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {gallery.map((item) => (
+                  <Card
+                    key={item.id}
+                    className="overflow-hidden group w-fit h-fit"
+                  >
+                    <div className="relative">
+                      <div className="w-full h-48 bg-gray-200">
+                        {item.type === "video" && item.videoUrl ? (
+                          <div className="w-full h-full flex items-center justify-center bg-black">
+                            <Video className="w-12 h-12 text-white" />
+                          </div>
+                        ) : item.imageUrl ? (
+                          <Image
+                            width={300}
+                            height={200}
+                            src={item.imageUrl}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                            loading="eager"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-300">
+                            <ImageIcon className="w-12 h-12 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="destructive"
+                        onClick={() =>
+                          handleDeleteGalleryItem(
+                            item.id,
+                            item.publicId,
+                            item.type,
+                          )
+                        }
+                        className="absolute top-2 right-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <CardContent className="p-3">
+                      <p
+                        className="font-semibold truncate text-sm"
+                        title={item.title}
+                      >
+                        {item.title}
+                      </p>
+                      <p className="text-xs text-muted-foreground capitalize">
+                        {item.category}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {!isLastPage && (
+                <div className="mt-6 flex justify-center">
+                  <Button
+                    onClick={() => fetchGallery(page + 1)}
+                    disabled={loadingGallery}
+                  >
+                    {loadingGallery ? "Loading..." : "Load more"}
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings" className="space-y-6">
+          <Card>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Phone className="w-5 h-5" /> Contact Information
+                </CardTitle>
+                <CardDescription>
+                  Update the public contact details for the ministry.
+                </CardDescription>
+              </div>
+              <div className="flex items-center space-x-2">
+                {mode === "view" && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setMode("edit");
+                      setOldContactInfo(contactInfo);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" /> Edit
+                  </Button>
+                )}
+
+                {mode === "edit" && (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setMode("view");
+                        setContactInfo(oldContactInfo);
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      onClick={saveContact}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Saving..." : "Save"}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="contact-email">Email</Label>
+                <Input
+                  id="contact-email"
+                  value={contactInfo.email || ""}
+                  disabled={mode === "view"}
+                  onChange={(e) =>
+                    setContactInfo((c) => ({ ...c, email: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-phone">Phone</Label>
+                <Input
+                  id="contact-phone"
+                  value={formatPhoneNumber(contactInfo.phone || "")}
+                  disabled={mode === "view"}
+                  onChange={(e) =>
+                    setContactInfo((c) => ({ ...c, phone: e.target.value }))
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-address">Address</Label>
+                <Textarea
+                  id="contact-address"
+                  value={contactInfo.address || ""}
+                  disabled={mode === "view"}
+                  onChange={(e) =>
+                    setContactInfo((c) => ({
+                      ...c,
+                      address: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Form Drawer (Legacy AdminForm for Gallery) */}
+      {/* {showForm && <AdminForm onClose={() => setShowForm(false)} />} */}
     </div>
   );
 }
