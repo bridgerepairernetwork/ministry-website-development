@@ -263,6 +263,36 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Counseling & Support Section */}
+      <section className="bg-white py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="bg-purple-50 rounded-3xl p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 border border-purple-100">
+            <div className="flex-1 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-bold uppercase tracking-wider">
+                <Heart className="w-4 h-4" /> Support & Guidance
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                Need Professional Counseling or Spiritual Guidance?
+              </h2>
+              <p className="text-gray-600 text-lg leading-relaxed">
+                Our certified coaches and spiritual mentors are available to
+                support you through emotional intelligence coaching, personal
+                guidance, and related professional services rooted in Biblical
+                foundations.
+              </p>
+              <Link href="/contact">
+                <Button className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-6 h-auto text-lg font-semibold rounded-xl">
+                  Contact Us for Counseling
+                </Button>
+              </Link>
+            </div>
+            <div className="flex-1 hidden md:flex justify-center opacity-20">
+              <Heart className="w-64 h-64 text-purple-600" strokeWidth={1} />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Program Ad */}
       <section className="bg-white py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-6">
