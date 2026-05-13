@@ -284,15 +284,27 @@ export default function AdminPage() {
                   Create and manage daily spiritual content.
                 </CardDescription>
               </div>
-              <Button onClick={() => setShowForm(!showForm)}>
-                {showForm ? (
-                  "Cancel"
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4 mr-2" /> New Devotional
-                  </>
-                )}
-              </Button>
+              {showForm ? (
+                <Button
+                  onClick={() => {
+                    setShowForm(false);
+                    setDevotionalForm({
+                      title: "",
+                      date: format(new Date(), "yyyy-MM-dd"),
+                      memoryVerse: { verse: "", text: "" },
+                      bibleText: { verse: "", text: "" },
+                      message: "",
+                      conclusion: "",
+                    });
+                  }}
+                >
+                  Cancel
+                </Button>
+              ) : (
+                <Button onClick={() => setShowForm(true)}>
+                  <Plus className="w-4 h-4 mr-2" /> New Devotional
+                </Button>
+              )}
             </CardHeader>
             <CardContent>
               {showForm && (
@@ -326,78 +338,78 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t">
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-sm text-purple-700">
-                        MEMORY VERSE
-                      </h4>
-                      <div className="space-y-2">
-                        <Label>Reference (e.g. John 3:16)</Label>
-                        <Input
-                          value={devotionalForm.memoryVerse.verse}
-                          onChange={(e) =>
-                            setDevotionalForm({
-                              ...devotionalForm,
-                              memoryVerse: {
-                                ...devotionalForm.memoryVerse,
-                                verse: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Text</Label>
-                        <Textarea
-                          value={devotionalForm.memoryVerse.text}
-                          onChange={(e) =>
-                            setDevotionalForm({
-                              ...devotionalForm,
-                              memoryVerse: {
-                                ...devotionalForm.memoryVerse,
-                                text: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
+                  {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t"> */}
+                  {/* <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-purple-700">
+                      MEMORY VERSE
+                    </h4>
+                    <div className="space-y-2">
+                      <Label>Reference (e.g. John 3:16)</Label>
+                      <Input
+                        value={devotionalForm.memoryVerse.verse}
+                        onChange={(e) =>
+                          setDevotionalForm({
+                            ...devotionalForm,
+                            memoryVerse: {
+                              ...devotionalForm.memoryVerse,
+                              verse: e.target.value,
+                            },
+                          })
+                        }
+                      />
                     </div>
-                    <div className="space-y-4">
-                      <h4 className="font-bold text-sm text-purple-700">
-                        BIBLE TEXT
-                      </h4>
-                      <div className="space-y-2">
-                        <Label>Reference</Label>
-                        <Input
-                          value={devotionalForm.bibleText.verse}
-                          onChange={(e) =>
-                            setDevotionalForm({
-                              ...devotionalForm,
-                              bibleText: {
-                                ...devotionalForm.bibleText,
-                                verse: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Text</Label>
-                        <Textarea
-                          value={devotionalForm.bibleText.text}
-                          onChange={(e) =>
-                            setDevotionalForm({
-                              ...devotionalForm,
-                              bibleText: {
-                                ...devotionalForm.bibleText,
-                                text: e.target.value,
-                              },
-                            })
-                          }
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <Label>Text</Label>
+                      <Textarea
+                        value={devotionalForm.memoryVerse.text}
+                        onChange={(e) =>
+                          setDevotionalForm({
+                            ...devotionalForm,
+                            memoryVerse: {
+                              ...devotionalForm.memoryVerse,
+                              text: e.target.value,
+                            },
+                          })
+                        }
+                      />
                     </div>
                   </div> */}
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-sm text-purple-700">
+                      BIBLE TEXT
+                    </h4>
+                    <div className="space-y-2">
+                      <Label>Reference</Label>
+                      <Input
+                        value={devotionalForm.bibleText.verse}
+                        onChange={(e) =>
+                          setDevotionalForm({
+                            ...devotionalForm,
+                            bibleText: {
+                              ...devotionalForm.bibleText,
+                              verse: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Text</Label>
+                      <Textarea
+                        value={devotionalForm.bibleText.text}
+                        onChange={(e) =>
+                          setDevotionalForm({
+                            ...devotionalForm,
+                            bibleText: {
+                              ...devotionalForm.bibleText,
+                              text: e.target.value,
+                            },
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                  {/* </div> */}
 
                   <div className="space-y-2 pt-4 border-t">
                     <Label>Message Body</Label>
@@ -414,7 +426,7 @@ export default function AdminPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Conclusion / Prayer</Label>
+                    <Label>Conclusion</Label>
                     <Textarea
                       value={devotionalForm.conclusion}
                       onChange={(e) =>

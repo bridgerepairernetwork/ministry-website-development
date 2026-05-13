@@ -319,6 +319,17 @@ export default function Home() {
             </p>
           </div>
 
+          <div className="max-w-4xl mx-auto mb-12 overflow-hidden rounded-3xl shadow-lg">
+            <Image
+              loading="eager"
+              src="/imgs/ekklesia-elite-team.jpeg"
+              alt="Ekklesia Elite Team"
+              width={1200}
+              height={700}
+              className="w-full object-contain"
+            />
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {[
               { name: "Photography", icon: Camera },
